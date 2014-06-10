@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<!--
+ (c) 2013 Rob Wu <gwnRob@gmail.com>
+ -->
+<html>
+<head>
+<meta charset="utf-8">
+<title>CRX Viewer</title>
+<link rel="stylesheet" type="text/css" href="crxviewer.css">
+<link rel="stylesheet" type="text/css" href="lib/google-code-prettify/prettify.css">
+</head>
+<body>
+<div id="top-bar">
+    <form>
+        <input type="text" id="file-filter" placeholder="filter (regex)" title="Only show files matching this regular expression" list="file-filter-patterns">
+        <label title="Filter: Images">
+            <input type="checkbox" data-filter-type="images"> Images
+        </label>
+        <label title="Filter: JavaScript code">
+            <input type="checkbox" data-filter-type="code"> Code
+        </label>
+        <label title="Filter: HTML, CSS">
+            <input type="checkbox" data-filter-type="markup"> Mark-up
+        </label>
+        <label title="Filter: Translations used by chrome.i18n">
+            <input type="checkbox" data-filter-type="locales"> Locales
+        </label>
+        <label title="Filter: Other files">
+            <input type="checkbox" data-filter-type="misc"> Misc
+        </label>
+    </form>
+    <span id="file-filter-feedback"></span>
+    <a id="webstore-link">Listing</a>
+    <a id="download-link">Download</a>
+</div>
+<div id="left-panel">
+    <div class="content">
+        <ol id="file-list"></ol>
+    </div>
+</div>
+<div id="right-panel">
+    <div id="source-code">
+        <div id="initial-status"></div>
+    </div>
+</div>
+<datalist id="file-filter-patterns">
+    <option value="\.js$" label="JavaScript">
+    <option value="\.css$" label="CSS">
+    <option value="\.html?$" label="HTML">
+    <option value="\.(js|css|html)$" label="JS / CSS / HTML">
+</datalist>
+<script src="lib/zip.js/zip.js"></script>
+<script src="lib/zip.js/mime-types.js"></script>
+<script src="lib/crx-to-zip.js"></script>
+<script src="chrome-platform-info.js"></script>
+<script src="cws_pattern.js"></script>
+<script src="lib/beautify/beautify.js"></script>
+<script src="lib/google-code-prettify/prettify.js"></script>
+<script src="lib/sha256.js"></script>
+<script src="crxviewer.js"></script>
+</body>
+</html>
+
