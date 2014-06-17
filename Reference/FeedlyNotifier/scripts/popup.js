@@ -1,160 +1,299 @@
 "use strict";
 
-function renderFeeds(a) {
-    showLoader(), popupGlobal.backgroundPage.getFeeds(popupGlobal.backgroundPage.appGlobal.options.forceUpdateFeeds || a, function (a, b) {
-        if (popupGlobal.feeds = a, b === !1) showLogin();
-        else if (0 === a.length) showEmptyContent();
-        else {
-            var c = $("#feed").show().empty();
-            popupGlobal.backgroundPage.appGlobal.options.showCategories && renderCategories(c, a), c.append($("#feedTemplate").mustache({
-                feeds: a
-            })), c.find(".timeago").timeago(), showFeeds()
-        }
-    })
-}
-
-function renderSavedFeeds(a) {
-    showLoader(), popupGlobal.backgroundPage.getSavedFeeds(popupGlobal.backgroundPage.appGlobal.options.forceUpdateFeeds || a, function (a, b) {
-        if (popupGlobal.savedFeeds = a, b === !1) showLogin();
-        else if (0 === a.length) showEmptyContent();
-        else {
-            var c = $("#feed-saved").empty();
-            popupGlobal.backgroundPage.appGlobal.options.showCategories && renderCategories(c, a), c.append($("#feedTemplate").mustache({
-                feeds: a
-            })), c.find(".timeago").timeago(), showSavedFeeds()
-        }
-    })
-}
-
-function markAsRead(a) {
-    for (var b = $(), c = 0; c < a.length; c++) b = b.add(".item[data-id='" + a[c] + "']");
-    b.fadeOut("fast", function () {
-        $(this).remove()
-    }), b.attr("data-is-read", "true"), 0 === $("#feed").find(".item[data-is-read!='true']").size() && showLoader(), popupGlobal.backgroundPage.markAsRead(a, function () {
-        0 === $("#feed").find(".item[data-is-read!='true']").size() && renderFeeds()
-    })
-}
-
-function markAllAsRead() {
-    var a = [];
-    $(".item:visible").each(function (b, c) {
-        a.push($(c).data("id"))
-    }), markAsRead(a)
-}
-
-function renderCategories(a, b) {
-    $(".categories").remove();
-    var c = getUniqueCategories(b);
-    a.append($("#categories-template").mustache({
-        categories: c
-    }))
-}
-
-function getUniqueCategories(a) {
-    var b = [],
-        c = [];
-    return a.forEach(function (a) {
-        a.categories.forEach(function (a) {
-            -1 === c.indexOf(a.id) && (b.push(a), c.push(a.id))
-        })
-    }), b
-}
-
-function showLoader() {
-    $("body").children("div").hide(), $("#loading").show()
-}
-
-function showLogin() {
-    $("body").children("div").hide(), $("#login-btn").text(chrome.i18n.getMessage("Login")), $("#login").show()
-}
-
-function showEmptyContent() {
-    $("body").children("div").hide(), $("#popup-content").show().children("div").hide().filter("#feed-empty").text(chrome.i18n.getMessage("NoUnreadArticles")).show(), $("#feedly").show().find("#popup-actions").hide()
-}
-
-function showFeeds() {
-    popupGlobal.backgroundPage.appGlobal.options.resetCounterOnClick && popupGlobal.backgroundPage.resetCounter(), $("body").children("div").hide(), $("#popup-content").show().children("div").hide().filter("#feed").show(), $("#feedly").show().find("#popup-actions").show().children().show(), $(".mark-read").attr("title", chrome.i18n.getMessage("MarkAsRead")), $(".show-content").attr("title", chrome.i18n.getMessage("More"))
-}
-
-function showSavedFeeds() {
-    $("body").children("div").hide(), $("#popup-content").show().children("div").hide().filter("#feed-saved").show().find(".mark-read").hide(), $("#feed-saved").find(".show-content").attr("title", chrome.i18n.getMessage("More")), $("#feedly").show().find("#popup-actions").show().children().hide().filter(".icon-refresh").show()
-}
-
-function setPopupExpand(a) {
-    if (a) $(".item").css("width", "700px"), $(".article-title, .blog-title").css("width", $("#popup-content").hasClass("tabs") ? "645px" : "660px");
-    else {
-        var b = $("#popup-content");
-        $(".item").css("width", b.hasClass("tabs") ? "380px" : "350px"), $(".article-title, .blog-title").css("width", b.hasClass("tabs") ? "325px" : "310px")
-    }
-}
 var popupGlobal = {
+    //Determines lists of supported jQuery.timeago localizations, default localization is en
     supportedTimeAgoLocales: ["ru", "fr", "pt-BR", "it", "cs"],
     feeds: [],
     savedFeeds: [],
     backgroundPage: chrome.extension.getBackgroundPage()
 };
+
 $(document).ready(function () {
-    $("#feed, #feed-saved").css("font-size", popupGlobal.backgroundPage.appGlobal.options.popupFontSize / 100 + "em"), $("#website").text(chrome.i18n.getMessage("FeedlyWebsite")), $("#mark-all-read>span").text(chrome.i18n.getMessage("MarkAllAsRead")), $("#update-feeds>span").text(chrome.i18n.getMessage("UpdateFeeds")), $("#open-all-news>span").text(chrome.i18n.getMessage("OpenAllFeeds")), popupGlobal.backgroundPage.appGlobal.options.abilitySaveFeeds && $("#popup-content").addClass("tabs"), -1 !== popupGlobal.supportedTimeAgoLocales.indexOf(window.navigator.language) ? $.getScript("/scripts/timeago/locales/jquery.timeago." + window.navigator.language + ".js", function () {
-        renderFeeds()
-    }) : renderFeeds()
-}), $("#login").click(function () {
-    popupGlobal.backgroundPage.getAccessToken()
-}), $("#feed, #feed-saved").on("mousedown", "a", function (a) {
-    var b = $(this);
-    if (1 === a.which || 2 === a.which) {
-        var c = !(a.ctrlKey || 2 === a.which);
-        chrome.tabs.create({
-            url: b.data("link"),
-            active: c
-        }, function () {
-            popupGlobal.backgroundPage.appGlobal.options.markReadOnClick && b.hasClass("title") && $("#feed").is(":visible") && markAsRead([b.closest(".item").data("id")])
-        })
+    $("#feed, #feed-saved").css("font-size", popupGlobal.backgroundPage.appGlobal.options.popupFontSize / 100 + "em");
+    $("#website").text(chrome.i18n.getMessage("FeedlyWebsite"));
+    $("#mark-all-read>span").text(chrome.i18n.getMessage("MarkAllAsRead"));
+    $("#update-feeds>span").text(chrome.i18n.getMessage("UpdateFeeds"));
+    $("#open-all-news>span").text(chrome.i18n.getMessage("OpenAllFeeds"));
+
+    if (popupGlobal.backgroundPage.appGlobal.options.abilitySaveFeeds) {
+        $("#popup-content").addClass("tabs");
     }
-}), $("#popup-content").on("click", "#mark-all-read", markAllAsRead), $("#popup-content").on("click", "#open-all-news", function () {
-    $("#feed").find("a.title[data-link]").filter(":visible").each(function (a, b) {
-        var c = $(b);
-        chrome.tabs.create({
-            url: c.data("link"),
-            active: !1
-        }, function () {})
-    }), popupGlobal.backgroundPage.appGlobal.options.markReadOnClick && markAllAsRead()
-}), $("#feed").on("click", ".mark-read", function () {
-    var a = $(this).closest(".item");
-    markAsRead([a.data("id")])
-}), $("#feedly").on("click", "#btn-feeds-saved", function () {
-    $(this).addClass("active-tab"), $("#btn-feeds").removeClass("active-tab"), renderSavedFeeds()
-}), $("#feedly").on("click", "#btn-feeds", function () {
-    $(this).addClass("active-tab"), $("#btn-feeds-saved").removeClass("active-tab"), renderFeeds()
-}), $("#popup-content").on("click", ".show-content", function () {
-    var a = $(this),
-        b = a.closest(".item"),
-        c = b.find(".content"),
-        d = b.data("id");
-    if ("" === c.html()) {
-        for (var e, f = $("#feed").is(":visible") ? popupGlobal.feeds : popupGlobal.savedFeeds, g = 0; g < f.length; g++) f[g].id === d && (e = f[g].content);
-        e && (c.html(e), c.find("a").each(function (a, b) {
-            var c = $(b);
-            c.data("link", c.attr("href")), c.attr("href", "javascript:void(0)")
-        }))
+
+    //If we support this localization of timeago, then insert script with it
+    if (popupGlobal.supportedTimeAgoLocales.indexOf(window.navigator.language) !== -1) {
+        //Trying load localization for jQuery.timeago
+        $.getScript("/scripts/timeago/locales/jquery.timeago." + window.navigator.language + ".js", function () {
+            renderFeeds();
+        });
+    } else {
+        renderFeeds();
     }
-    c.slideToggle(function () {
-        a.css("background-position", c.is(":visible") ? "-288px -120px" : "-313px -119px"), c.is(":visible") && c.text().length > 350 ? setPopupExpand(!0) : setPopupExpand(!1)
-    })
-}), $("#feedly").on("click", "#update-feeds", function () {
-    $("#feed").is(":visible") ? renderFeeds(!0) : renderSavedFeeds(!0)
-}), $("#popup-content").on("click", ".save-feed", function () {
-    var a = $(this),
-        b = a.closest(".item"),
-        c = b.data("id"),
-        d = !a.data("saved");
-    popupGlobal.backgroundPage.toggleSavedFeed(c, d), a.data("saved", d), a.toggleClass("saved")
-}), $("#popup-content").on("click", "#website", function () {
-    popupGlobal.backgroundPage.openFeedlyTab()
-}), $("#popup-content").on("click", ".categories > span", function () {
-    $(".categories").find("span").removeClass("active");
-    var a = $(this).addClass("active"),
-        b = a.data("id");
-    b ? ($(".item").hide(), $(".item[data-categories~='" + b + "']").show()) : $(".item").show()
-}), $("#feedly").on("click", "#feedly-logo", function (a) {
-    a.ctrlKey && (popupGlobal.backgroundPage.appGlobal.options.abilitySaveFeeds = !popupGlobal.backgroundPage.appGlobal.options.abilitySaveFeeds, location.reload())
 });
+
+$("#login").click(function () {
+    popupGlobal.backgroundPage.getAccessToken();
+});
+
+//using "mousedown" instead of "click" event to process middle button click.
+$("#feed, #feed-saved").on("mousedown", "a", function (event) {
+    var link = $(this);
+    if (event.which === 1 || event.which === 2) {
+        var isActiveTab = !(event.ctrlKey || event.which === 2);
+        chrome.tabs.create({url: link.data("link"), active: isActiveTab }, function () {
+            if (popupGlobal.backgroundPage.appGlobal.options.markReadOnClick && link.hasClass("title") && $("#feed").is(":visible")) {
+                markAsRead([link.closest(".item").data("id")]);
+            }
+        });
+    }
+});
+
+$("#popup-content").on("click", "#mark-all-read", markAllAsRead);
+
+$("#popup-content").on("click", "#open-all-news", function () {
+    $("#feed").find("a.title[data-link]").filter(":visible").each(function (key, value) {
+        var news = $(value);
+        chrome.tabs.create({url: news.data("link"), active: false }, function () {});
+    });
+    if (popupGlobal.backgroundPage.appGlobal.options.markReadOnClick) {
+        markAllAsRead();
+    }
+});
+
+$("#feed").on("click", ".mark-read", function (event) {
+    var feed = $(this).closest(".item");
+    markAsRead([feed.data("id")]);
+});
+
+$("#feedly").on("click", "#btn-feeds-saved", function () {
+    $(this).addClass("active-tab");
+    $("#btn-feeds").removeClass("active-tab");
+    renderSavedFeeds();
+});
+
+$("#feedly").on("click", "#btn-feeds", function () {
+    $(this).addClass("active-tab");
+    $("#btn-feeds-saved").removeClass("active-tab");
+    renderFeeds();
+});
+
+$("#popup-content").on("click", ".show-content", function () {
+    var $this = $(this);
+    var feed = $this.closest(".item");
+    var contentContainer = feed.find(".content");
+    var feedId = feed.data("id");
+    if (contentContainer.html() === "") {
+        var content;
+        var feeds = $("#feed").is(":visible") ? popupGlobal.feeds : popupGlobal.savedFeeds;
+
+        for (var i = 0; i < feeds.length; i++) {
+            if (feeds[i].id === feedId) {
+                content = feeds[i].content
+            }
+        }
+        if (content) {
+            contentContainer.html(content);
+            //For open new tab without closing popup
+            contentContainer.find("a").each(function (key, value) {
+                var link = $(value);
+                link.data("link", link.attr("href"));
+                link.attr("href", "javascript:void(0)");
+            });
+        }
+    }
+    contentContainer.slideToggle(function () {
+        $this.css("background-position", contentContainer.is(":visible") ? "-288px -120px" : "-313px -119px");
+        if (contentContainer.is(":visible") && contentContainer.text().length > 350) {
+            setPopupExpand(true);
+        } else {
+            setPopupExpand(false);
+        }
+    });
+});
+
+/* Manually feeds update */
+$("#feedly").on("click", "#update-feeds", function () {
+    if ($("#feed").is(":visible")) {
+        renderFeeds(true);
+    } else {
+        renderSavedFeeds(true);
+    }
+});
+
+/* Save or unsave feed */
+$("#popup-content").on("click", ".save-feed", function () {
+    var $this = $(this);
+    var feed = $this.closest(".item");
+    var feedId = feed.data("id");
+    var saveItem = !$this.data("saved");
+    popupGlobal.backgroundPage.toggleSavedFeed(feedId, saveItem);
+    $this.data("saved", saveItem);
+    $this.toggleClass("saved");
+});
+
+$("#popup-content").on("click", "#website", function(){
+    popupGlobal.backgroundPage.openFeedlyTab();
+});
+
+$("#popup-content").on("click", ".categories > span", function (){
+    $(".categories").find("span").removeClass("active");
+    var button = $(this).addClass("active");
+    var categoryId = button.data("id");
+    if (categoryId) {
+        $(".item").hide();
+        $(".item[data-categories~='" + categoryId + "']").show();
+    } else {
+        $(".item").show();
+    }
+});
+
+$("#feedly").on("click", "#feedly-logo", function (event) {
+    if (event.ctrlKey) {
+        popupGlobal.backgroundPage.appGlobal.options.abilitySaveFeeds = !popupGlobal.backgroundPage.appGlobal.options.abilitySaveFeeds;
+        location.reload();
+    }
+});
+
+function renderFeeds(forceUpdate) {
+    showLoader();
+    popupGlobal.backgroundPage.getFeeds(popupGlobal.backgroundPage.appGlobal.options.forceUpdateFeeds || forceUpdate, function (feeds, isLoggedIn) {
+        popupGlobal.feeds = feeds;
+        if (isLoggedIn === false) {
+            showLogin();
+        } else {
+            if (feeds.length === 0) {
+                showEmptyContent();
+            } else {
+                var container = $("#feed").show().empty();
+
+                if (popupGlobal.backgroundPage.appGlobal.options.showCategories) {
+                    renderCategories(container, feeds);
+                }
+
+                container.append($("#feedTemplate").mustache({feeds: feeds}));
+                container.find(".timeago").timeago();
+                showFeeds();
+            }
+        }
+    });
+}
+
+function renderSavedFeeds(forceUpdate) {
+    showLoader();
+    popupGlobal.backgroundPage.getSavedFeeds(popupGlobal.backgroundPage.appGlobal.options.forceUpdateFeeds || forceUpdate, function (feeds, isLoggedIn) {
+        popupGlobal.savedFeeds = feeds;
+        if (isLoggedIn === false) {
+            showLogin();
+        } else {
+            if (feeds.length === 0) {
+                showEmptyContent();
+            } else {
+                var container = $("#feed-saved").empty();
+
+                if (popupGlobal.backgroundPage.appGlobal.options.showCategories) {
+                    renderCategories(container, feeds);
+                }
+
+                container.append($("#feedTemplate").mustache({feeds: feeds}));
+                container.find(".timeago").timeago();
+                showSavedFeeds();
+            }
+        }
+    });
+}
+
+function markAsRead(feedIds) {
+    var feedItems = $();
+    for (var i = 0; i < feedIds.length; i++) {
+        feedItems = feedItems.add(".item[data-id='" + feedIds[i] + "']");
+    }
+
+    feedItems.fadeOut("fast", function(){
+        $(this).remove();
+    });
+
+    feedItems.attr("data-is-read", "true");
+
+    //Show loader if all feeds were read
+    if ($("#feed").find(".item[data-is-read!='true']").size() === 0) {
+        showLoader();
+    }
+    popupGlobal.backgroundPage.markAsRead(feedIds, function () {
+        if ($("#feed").find(".item[data-is-read!='true']").size() === 0) {
+            renderFeeds();
+        }
+    });
+}
+
+function markAllAsRead() {
+    var feedIds = [];
+    $(".item:visible").each(function (key, value) {
+        feedIds.push($(value).data("id"));
+    });
+    markAsRead(feedIds);
+}
+
+function renderCategories(container, feeds){
+    $(".categories").remove();
+    var categories = getUniqueCategories(feeds);
+    container.append($("#categories-template").mustache({categories: categories}));
+}
+
+function getUniqueCategories(feeds){
+    var categories = [];
+    var addedIds = [];
+    feeds.forEach(function(feed){
+        feed.categories.forEach(function (category) {
+            if (addedIds.indexOf(category.id) === -1) {
+                categories.push(category);
+                addedIds.push(category.id);
+            }
+        });
+    });
+    return categories;
+}
+
+function showLoader() {
+    $("body").children("div").hide();
+    $("#loading").show();
+}
+
+function showLogin() {
+    $("body").children("div").hide();
+    $("#login-btn").text(chrome.i18n.getMessage("Login"));
+    $("#login").show();
+}
+
+function showEmptyContent() {
+    $("body").children("div").hide();
+    $("#popup-content").show().children("div").hide().filter("#feed-empty").text(chrome.i18n.getMessage("NoUnreadArticles")).show();
+    $("#feedly").show().find("#popup-actions").hide();
+}
+
+function showFeeds() {
+    if (popupGlobal.backgroundPage.appGlobal.options.resetCounterOnClick) {
+        popupGlobal.backgroundPage.resetCounter();
+    }
+    $("body").children("div").hide();
+    $("#popup-content").show().children("div").hide().filter("#feed").show();
+    $("#feedly").show().find("#popup-actions").show().children().show();
+    $(".mark-read").attr("title", chrome.i18n.getMessage("MarkAsRead"));
+    $(".show-content").attr("title", chrome.i18n.getMessage("More"));
+}
+
+function showSavedFeeds() {
+    $("body").children("div").hide();
+    $("#popup-content").show().children("div").hide().filter("#feed-saved").show().find(".mark-read").hide();
+    $("#feed-saved").find(".show-content").attr("title", chrome.i18n.getMessage("More"));
+    $("#feedly").show().find("#popup-actions").show().children().hide().filter(".icon-refresh").show();
+}
+
+function setPopupExpand(isExpand){
+    if (isExpand){
+        $(".item").css("width", "700px");
+        $(".article-title, .blog-title").css("width", $("#popup-content").hasClass("tabs") ? "645px" : "660px");
+    } else {
+        var popupContent = $("#popup-content");
+        $(".item").css("width", popupContent.hasClass("tabs") ? "380px" : "350px");
+        $(".article-title, .blog-title").css("width", popupContent.hasClass("tabs") ? "325px" : "310px");
+    }
+}

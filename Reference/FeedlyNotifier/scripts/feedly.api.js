@@ -1,33 +1,88 @@
 "use strict";
-var FeedlyApiClient = function (a) {
-    this.accessToken = a;
-    var b = "http://cloud.feedly.com/v3/",
-        c = "https://cloud.feedly.com/v3/",
-        d = chrome.runtime.getManifest().version;
-    this.getMethodUrl = function (a, e, f) {
-        if (void 0 === a) return "";
-        var g = (f ? c : b) + a,
-            h = "?";
-        for (var i in e) h += i + "=" + e[i] + "&";
-        return h += "av=c" + d, g += h
-    }, this.request = function (a, b) {
-        var c = this.getMethodUrl(a, b.parameters, b.useSecureConnection),
-            d = b.method || "GET";
-        "GET" === d && (c += (/\?/.test(c) ? "&" : "?") + "ck=" + (new Date).getTime());
-        var e = new XMLHttpRequest;
-        e.timeout = 5e3, e.open(d, c, !0), this.accessToken && e.setRequestHeader("Authorization", "OAuth " + this.accessToken), e.onload = function (a) {
-            var c;
+
+var FeedlyApiClient = function (accessToken) {
+
+    this.accessToken = accessToken;
+
+    var apiUrl = "http://cloud.feedly.com/v3/";
+    var secureApiUrl = "https://cloud.feedly.com/v3/";
+    var extensionVersion = chrome.runtime.getManifest().version;
+
+    this.getMethodUrl = function (methodName, parameters, useSecureConnection) {
+        if (methodName === undefined) {
+            return "";
+        }
+        var methodUrl = (useSecureConnection ? secureApiUrl : apiUrl) + methodName;
+
+        var queryString = "?";
+        for (var parameterName in parameters) {
+            queryString += parameterName + "=" + parameters[parameterName] + "&";
+        }
+        queryString += "av=c" + extensionVersion;
+
+        methodUrl += queryString;
+
+        return methodUrl;
+    };
+
+    this.request = function (methodName, settings) {
+        var url = this.getMethodUrl(methodName, settings.parameters, settings.useSecureConnection);
+        var verb = settings.method || "GET";
+
+        // For bypassing the cache
+        if (verb === "GET"){
+            url += ((/\?/).test(url) ? "&" : "?") + "ck=" + (new Date()).getTime();
+        }
+
+        var request = new XMLHttpRequest();
+        if (settings.timeout){
+            request.timeout = settings.timeout;
+        }
+        request.open(verb, url, true);
+
+        if (this.accessToken) {
+            request.setRequestHeader("Authorization", "OAuth " + this.accessToken);
+        }
+
+        request.onload = function (e) {
+            var json;
             try {
-                c = JSON.parse(a.target.response)
-            } catch (d) {
-                c = {
-                    parsingError: d.message,
-                    response: a.target.response
+                json = JSON.parse(e.target.response);
+            } catch (exception) {
+                json = {
+                    parsingError: exception.message,
+                    response: e.target.response
                 }
             }
-            200 === a.target.status ? "function" == typeof b.onSuccess && b.onSuccess(c) : 401 === a.target.status ? "function" == typeof b.onAuthorizationRequired && b.onAuthorizationRequired(b.accessToken) : 400 === a.target.status && "function" == typeof b.onError && b.onError(c), "function" == typeof b.onComplete && b.onComplete(c)
+            if (e.target.status === 200) {
+                if (typeof settings.onSuccess === "function") {
+                    settings.onSuccess(json);
+                }
+            } else if (e.target.status === 401) {
+                if (typeof settings.onAuthorizationRequired === "function") {
+                    settings.onAuthorizationRequired(settings.accessToken);
+                }
+            } else if (e.target.status === 400) {
+                if (typeof settings.onError === "function") {
+                    settings.onError(json);
+                }
+            }
+
+            if (typeof settings.onComplete === "function"){
+                settings.onComplete(json);
+            }
         };
-        var f;
-        b.body && (f = JSON.stringify(b.body)), e.send(f)
-    }
+
+        request.ontimeout = function (e) {
+            if (typeof settings.onComplete === "function"){
+                settings.onComplete(e);
+            }
+        };
+
+        var body;
+        if (settings.body) {
+            body = JSON.stringify(settings.body);
+        }
+        request.send(body);
+    };
 };

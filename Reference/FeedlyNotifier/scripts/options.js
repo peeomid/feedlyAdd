@@ -1,103 +1,157 @@
 "use strict";
 
-function loadProfileData() {
-    chrome.extension.getBackgroundPage().apiRequestWrapper("profile", {
-        useSecureConnection: chrome.extension.getBackgroundPage().appGlobal.options.useSecureConnection,
-        onSuccess: function (a) {
-            var b = $("#userInfo");
-            b.find("[data-locale-value]").each(function () {
-                var a = $(this),
-                    b = a.data("locale-value");
-                a.text(chrome.i18n.getMessage(b))
-            }), b.show();
-            for (var c in a) b.find("span[data-value-name='" + c + "']").text(a[c])
-        },
-        onAuthorizationRequired: function () {
-            $("#userInfo, #filters-settings").hide()
-        }
-    })
-}
-
-function loadUserCategories() {
-    chrome.extension.getBackgroundPage().apiRequestWrapper("categories", {
-        onSuccess: function (a) {
-            a.forEach(function (a) {
-                appendCategory(a.id, a.label)
-            }), appendCategory(chrome.extension.getBackgroundPage().appGlobal.globalUncategorized, "Uncategorized"), chrome.storage.sync.get("filters", function (a) {
-                var b = a.filters || [];
-                b.forEach(function (a) {
-                    $("#categories").find("input[data-id='" + a + "']").attr("checked", "checked")
-                })
-            })
-        }
-    })
-}
-
-function appendCategory(a, b) {
-    var c = $("#categories"),
-        b = $("<span class='label' />").text(b),
-        d = $("<input type='checkbox' />").attr("data-id", a);
-    c.append(b), c.append(d), c.append("<br/>")
-}
-
-function parseFilters() {
-    var a = [];
-    return $("#categories").find("input[type='checkbox']:checked").each(function (b, c) {
-        var d = $(c);
-        a.push(d.data("id"))
-    }), a
-}
-
-function saveOptions() {
-    var a = {};
-    $("#options").find("input[data-option-name]").each(function (b, c) {
-        var d, e = $(c);
-        d = "checkbox" === e.attr("type") ? e.is(":checked") : "number" === e.attr("type") ? Number(e.val()) : e.val(), a[e.data("option-name")] = d
-    }), a.filters = parseFilters(), setBackgroundMode($("#enable-background-mode").is(":checked")), chrome.storage.sync.set(a, function () {
-        alert(chrome.i18n.getMessage("OptionsSaved"))
-    })
-}
-
-function loadOptions() {
-    chrome.permissions.contains(optionsGlobal.backgroundPermission, function (a) {
-        $("#enable-background-mode").prop("checked", a)
-    }), chrome.storage.sync.get(null, function (a) {
-        var b = $("#options");
-        for (var c in a) {
-            var d = b.find("input[data-option-name='" + c + "']");
-            "checkbox" === d.attr("type") ? d.attr("checked", a[c]) : d.val(a[c])
-        }
-        b.find("input").trigger("change")
-    }), $("#header").text(chrome.i18n.getMessage("FeedlyNotifierOptions")), $("#options").find("[data-locale-value]").each(function () {
-        var a = $(this),
-            b = a.data("locale-value");
-        a.text(chrome.i18n.getMessage(b))
-    })
-}
-
-function setBackgroundMode(a) {
-    a ? chrome.permissions.request(optionsGlobal.backgroundPermission, function () {}) : chrome.permissions.remove(optionsGlobal.backgroundPermission, function () {})
-}
 var optionsGlobal = {
     backgroundPermission: {
         permissions: ["background"]
     }
 };
+
 $(document).ready(function () {
-    loadOptions(), loadUserCategories(), loadProfileData()
-}), $("body").on("click", "#save", function (a) {
-    var b = document.getElementById("options");
-    b.checkValidity() && (a.preventDefault(), saveOptions())
-}), $("body").on("click", "#logout", function () {
-    chrome.extension.getBackgroundPage().appGlobal.options.accessToken = "", chrome.extension.getBackgroundPage().appGlobal.options.refreshToken = "", chrome.storage.sync.remove(["accessToken", "refreshToken"], function () {}), $("#userInfo, #filters-settings").hide()
-}), $("#options").on("change", "input", function () {
-    $("[data-disable-parent]").each(function (a, b) {
-        var c = $(b),
-            d = $("input[data-option-name='" + c.data("disable-parent") + "']");
-        d.is(":checked") ? c.attr("disabled", "disable") : c.removeAttr("disabled")
-    }), $("[data-enable-parent]").each(function (a, b) {
-        var c = $(b),
-            d = $("input[data-option-name='" + c.data("enable-parent") + "']");
-        d.is(":checked") ? c.removeAttr("disabled") : c.attr("disabled", "disable")
-    })
+    loadOptions();
+    loadUserCategories();
+    loadProfileData();
 });
+
+$("body").on("click", "#save", function (e) {
+    var form = document.getElementById("options");
+    if (form.checkValidity()) {
+        e.preventDefault();
+        saveOptions();
+    }
+});
+
+$("body").on("click", "#logout", function () {
+    chrome.extension.getBackgroundPage().appGlobal.options.accessToken = "";
+    chrome.extension.getBackgroundPage().appGlobal.options.refreshToken = "";
+    chrome.storage.sync.remove(["accessToken", "refreshToken"], function () {});
+    $("#userInfo, #filters-settings").hide();
+});
+
+$("#options").on("change", "input", function (e) {
+    $("[data-disable-parent]").each(function(key, value){
+        var child = $(value);
+        var parent = $("input[data-option-name='" + child.data("disable-parent") + "']");
+        parent.is(":checked") ? child.attr("disabled", "disable") : child.removeAttr("disabled");
+    });
+
+    $("[data-enable-parent]").each(function(key, value){
+        var child = $(value);
+        var parent = $("input[data-option-name='" + child.data("enable-parent") + "']");
+        !parent.is(":checked") ? child.attr("disabled", "disable") : child.removeAttr("disabled");
+    });
+});
+
+function loadProfileData() {
+    chrome.extension.getBackgroundPage().apiRequestWrapper("profile", {
+        useSecureConnection: chrome.extension.getBackgroundPage().appGlobal.options.useSecureConnection,
+        onSuccess: function (result) {
+            var userInfo = $("#userInfo");
+            userInfo.find("[data-locale-value]").each(function () {
+                var textBox = $(this);
+                var localValue = textBox.data("locale-value");
+                textBox.text(chrome.i18n.getMessage(localValue));
+            });
+            userInfo.show();
+            for (var profileData in result) {
+                userInfo.find("span[data-value-name='" + profileData + "']").text(result[profileData]);
+            }
+        },
+        onAuthorizationRequired: function () {
+            $("#userInfo, #filters-settings").hide();
+        }
+    });
+}
+
+function loadUserCategories(){
+    chrome.extension.getBackgroundPage().apiRequestWrapper("categories", {
+        onSuccess: function (result) {
+            result.forEach(function(element){
+                appendCategory(element.id, element.label);
+            });
+            appendCategory(chrome.extension.getBackgroundPage().appGlobal.globalUncategorized, "Uncategorized");
+            chrome.storage.sync.get("filters", function(items){
+                var filters = items.filters || [];
+                filters.forEach(function(id){
+                    $("#categories").find("input[data-id='" + id +"']").attr("checked", "checked");
+                });
+            });
+        }
+    });
+}
+
+function appendCategory(id, label){
+    var categories = $("#categories");
+    var label = $("<span class='label' />").text(label);
+    var checkbox = $("<input type='checkbox' />").attr("data-id", id);
+    categories.append(label);
+    categories.append(checkbox);
+    categories.append("<br/>");
+}
+
+function parseFilters() {
+    var filters = [];
+    $("#categories").find("input[type='checkbox']:checked").each(function (key, value) {
+        var checkbox = $(value);
+        filters.push(checkbox.data("id"));
+    });
+    return filters;
+}
+
+/* Save all option in the chrome storage */
+function saveOptions() {
+    var options = {};
+    $("#options").find("input[data-option-name]").each(function (optionName, value) {
+        var optionControl = $(value);
+        var optionValue;
+        if (optionControl.attr("type") === "checkbox") {
+            optionValue = optionControl.is(":checked");
+        } else if (optionControl.attr("type") === "number") {
+            optionValue = Number(optionControl.val());
+        } else {
+            optionValue = optionControl.val();
+        }
+        options[optionControl.data("option-name")] = optionValue;
+    });
+    options.filters = parseFilters();
+
+    setBackgroundMode($("#enable-background-mode").is(":checked"));
+
+    chrome.storage.sync.set(options, function () {
+        alert(chrome.i18n.getMessage("OptionsSaved"));
+    });
+}
+
+function loadOptions() {
+    chrome.permissions.contains(optionsGlobal.backgroundPermission, function (enabled){
+        $("#enable-background-mode").prop("checked", enabled);
+    });
+
+    chrome.storage.sync.get(null, function (items) {
+        var optionsForm = $("#options");
+        for (var option in items) {
+            var optionControl = optionsForm.find("input[data-option-name='" + option + "']");
+            if (optionControl.attr("type") === "checkbox") {
+                optionControl.attr("checked", items[option]);
+            } else {
+                optionControl.val(items[option]);
+            }
+        }
+        optionsForm.find("input").trigger("change");
+    });
+    $("#header").text(chrome.i18n.getMessage("FeedlyNotifierOptions"));
+    $("#options").find("[data-locale-value]").each(function () {
+        var textBox = $(this);
+        var localValue = textBox.data("locale-value");
+        textBox.text(chrome.i18n.getMessage(localValue));
+    });
+}
+
+function setBackgroundMode(enable) {
+    if (enable) {
+        chrome.permissions.request(optionsGlobal.backgroundPermission, function () {
+        });
+    } else {
+        chrome.permissions.remove(optionsGlobal.backgroundPermission, function () {
+        });
+    }
+}
