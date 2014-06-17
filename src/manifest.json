@@ -1,6 +1,6 @@
 {
    "background": {
-      "scripts": [ "background.js" ,"js/background.js"]
+      "scripts": [ "js/feedly.api.js" ,"js/background.js"]
    },
    "page_action": {
       "default_icon": "icon-128.png",
