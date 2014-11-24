@@ -22,12 +22,42 @@
     font-size: small;
     vertical-align: bottom;
   }
+  .hide {
+    display: none;
+  }
+
 </style>
-<script type="text/javascript" src="js/popup.js"></script>
 </head>
 <body>
+    <!-- Content - used to display feed list -->
   <div id="content">
     <span id="heading" class="heading">Loading...</span>
   </div>
+
+  <!-- Login - used to display login -->
+  <div id="login" class="hide">
+    <button id="login-btn" class="button">Login</button>
+  </div>
+
+  <!-- addSubscription - used to dipslay subscription option -->
+  <div id="addSubscription" class="hide">
+    <input type="hidden" id="clickedLink" value="">
+    <div id="titleSec">
+        <span class="subHeading">Title</span>
+        <input type="text" name="title" id="title" value="" placeholder="">
+    </div>
+
+    <div id="collectionSec" class="">
+        <span class="subHeading">Collection</span>
+        <div id="collectionList">
+        </div>
+    </div>
+    <input type="button" id="subscribe" value="Add">
+  </div>
+
+  <div id="message" class="hide">
+      <span id="messageContent">Added!</span>
+  </div>
+  <script type="text/javascript" src="js/popup.js"></script>
 </body>
 </html>

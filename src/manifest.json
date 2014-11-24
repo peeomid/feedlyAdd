@@ -12,11 +12,11 @@
       {
        "js": [ "js/sniff_common.js", "js/feed_finder.js" ],
        "matches": [ "http://*/*", "https://*/*" ]
-      } 
+      }
    ],
    // "default_locale": "en",
    "description": "Quickly add Feeds to Feedly without leaving current tab",
-   "homepage_url": "http://www.marcosbl.com/",
+   "homepage_url": "http://www.peeomid.com/",
    "icons": {
       "128": "icon-128.png",
       "16": "icon-16.png",
@@ -31,5 +31,5 @@
    "short_name": "Add feed to Feedly",
    "permissions": [ "tabs", "http://*/*", "https://*/*" ,"notifications", "storage" ],
    "update_url": "https://clients2.google.com/service/update2/crx",
-   "version": "0.4.2"
+   "version": "0.1"
 }

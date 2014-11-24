@@ -1,11 +1,27 @@
 <html>
-<head><title id="options_title"></title></head>
+<head>
+    <title id="options_title"></title>
+    <link rel="stylesheet" type="text/css" href="options.css"/>
+</head>
 
-<body>
-
-<h1 id="options_h1">Add to Feedly&#153; Options</h1>
-<div>No options for this extension</div>
-
-
+<body id="option-page">
+    <div id="container">
+        <div id="header">FeedlyAdd options</div>
+        <!-- <h1 id="options_h1">Feedly Add Options</h1> -->
+        <div id="options">
+            <h3>Good news! No options, no headache!</h3>
+        </div>
+        <div id="userInfo" class="hide">
+            <div class="options-section">
+                <span class="label" data-locale-value="CurrentUser"></span>
+                <span data-value-name="givenName"></span>
+                <span data-value-name="familyName"></span><br>
+                <span class="label" data-locale-value="Email">Email</span>
+                <span data-value-name="email"></span>
+            </div>
+            <button type="submit" id="logout" class="button" data-locale-value="Logout">Logout</button>
+        </div>
+    </div>
+    <script src="options.js"></script>
 </body>
 </html>

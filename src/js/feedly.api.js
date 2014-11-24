@@ -4,8 +4,11 @@ var FeedlyApiClient = function (accessToken) {
 
     this.accessToken = accessToken;
 
-    var apiUrl = "http://cloud.feedly.com/v3/";
-    var secureApiUrl = "https://cloud.feedly.com/v3/";
+    // sandbox.feedly.com
+    // var apiUrl = "http://cloud.feedly.com/v3/";
+    // var secureApiUrl = "https://cloud.feedly.com/v3/";
+    var apiUrl = "http://sandbox.feedly.com/v3/";
+    var secureApiUrl = "https://sandbox.feedly.com/v3/";
     var extensionVersion = chrome.runtime.getManifest().version;
 
     this.getMethodUrl = function (methodName, parameters, useSecureConnection) {
@@ -82,6 +85,8 @@ var FeedlyApiClient = function (accessToken) {
         var body;
         if (settings.body) {
             body = JSON.stringify(settings.body);
+            console.log('body here');
+            console.log(body);
         }
         request.send(body);
     };
