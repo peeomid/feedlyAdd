@@ -41,6 +41,9 @@ var FeedlyApiClient = function (accessToken) {
         if (settings.timeout){
             request.timeout = settings.timeout;
         }
+
+        console.log('request open');
+        console.log(url);
         request.open(verb, url, true);
 
         if (this.accessToken) {

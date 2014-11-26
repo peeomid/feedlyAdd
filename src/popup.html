@@ -8,6 +8,8 @@
 <style>
   body {
     overflow-x: hidden;
+    font: 13px sans-serif;
+    min-width: 250px;
   }
 
   .heading {
@@ -25,7 +27,55 @@
   .hide {
     display: none;
   }
-
+  .top-nav {
+    height: 30px;
+    background-color: #EFEFEF;
+    /*background-color: #6cc655;*/
+  }
+ .top-nav .back-btn {
+    height: 100%;
+    border: 0px;
+    background-color: inherit;
+    color: #707070;
+  }
+ .subHeading {
+    font-size: 13px;
+    color: #262626;
+    font-weight: bold;
+    display: block;
+  }
+  .btnFeed {
+    height: 25px;
+    width: 90px;
+    background-color: #2bb24c;
+    color: #FFFFFF;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: normal;
+    color: #FFFFFF;
+    text-align: center;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    margin-left: 4px;
+    border: 0px;
+    cursor: pointer;
+  }
+  .collectionItem {
+    margin: 3px 0px;
+  }
+  .content {
+    margin: 10px 0px;
+    padding: 0px 10px;
+  }
+  #titleSec {
+    margin-bottom: 5px;
+  }
+  #title {
+    min-width: 180px;
+  }
+  .textinput{
+    font-size: 12px;
+  }
 </style>
 </head>
 <body>
@@ -36,23 +86,33 @@
 
   <!-- Login - used to display login -->
   <div id="login" class="hide">
-    <button id="login-btn" class="button">Login</button>
+    <div class="top-nav">
+        <input type="button" class="back-btn" value="<Back">
+    </div>
+    <div class="content">
+        <button id="login-btn" class="btnFeed">Login</button>
+    </div>
   </div>
 
   <!-- addSubscription - used to dipslay subscription option -->
   <div id="addSubscription" class="hide">
-    <input type="hidden" id="clickedLink" value="">
-    <div id="titleSec">
-        <span class="subHeading">Title</span>
-        <input type="text" name="title" id="title" value="" placeholder="">
+    <div class="top-nav">
+        <input type="button" class="back-btn" value="<Back">
     </div>
-
-    <div id="collectionSec" class="">
-        <span class="subHeading">Collection</span>
-        <div id="collectionList">
+    <div class="content">
+        <input type="hidden" id="clickedLink" value="">
+        <div id="titleSec">
+            <span class="subHeading">Title</span>
+            <input type="text" name="title" id="title" value="" placeholder="" class="textinput">
         </div>
+
+        <div id="collectionSec" class="">
+            <span class="subHeading">Collection</span>
+            <div id="collectionList">
+            </div>
+        </div>
+        <input type="button" id="subscribe" class="btnFeed" value="Add">
     </div>
-    <input type="button" id="subscribe" value="Add">
   </div>
 
   <div id="message" class="hide">

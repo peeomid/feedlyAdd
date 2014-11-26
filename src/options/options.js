@@ -16,7 +16,7 @@ function loadProfileData() {
         backgroundPage.apiRequestWrapper("profile", {
             useSecureConnection: backgroundPage.appGlobal.options.useSecureConnection,
             onSuccess: function (result) {
-                console.log('success');
+                console.log('success Profile');
                 var userInfo = document.getElementById('userInfo');
                 // userInfo.find("[data-locale-value]").each(function () {
                 //     var textBox = $(this);

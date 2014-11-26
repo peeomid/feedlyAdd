@@ -32,7 +32,7 @@ function categoryCheckbox(category) {
     // checkbox.id = category.id;
 
     var spanTitle = document.createElement('span');
-    spanTitle.innerHTML = category.label;
+    spanTitle.innerHTML = capitaliseFirstLetter(category.label);
 
     collectionItem.appendChild(checkbox);
     collectionItem.appendChild(spanTitle);
@@ -64,6 +64,13 @@ function main() {
     var subscribeButton = document.getElementById('subscribe');
     subscribeButton.addEventListener("click", subscribeSelectedItem);
 
+    var backButtons = document.getElementsByClassName('back-btn');
+    for (var i = 0; i < backButtons.length; i++) {
+        backButtons[i].addEventListener("click", function(){
+            showElement('content');
+        });
+    }
+
 }
 
 function subscribeSelectedItem () {
@@ -84,6 +91,8 @@ function dipslayFeedList() {
       //   //preview(feeds[0].href);
       // } else {
         var content = document.getElementById('content');
+        var heading = document.getElementById('heading');
+        heading.innerText = "Click to subscribe... ";
         // var heading = document.getElementById('heading');
         // heading.innerText =
         //     chrome.i18n.getMessage("rss_subscription_action_title");
@@ -127,18 +136,20 @@ function onClick(event) {
     var isLoggedIn = backgroundPage.appGlobal.isLoggedIn;
 
     // preview(a.href);
-    // console.log(a);
+    console.log('click a');
+    console.log(a);
     if (isLoggedIn) {
         var collectionList = document.getElementById('collectionList');
         if (!collectionList.firstElementChild) {
-            loadUserCategories(function(){
-                var storedLink = document.getElementById('clickedLink');
-                storedLink.value = a.href;
-                //load categories then display them
-                displayCategoryList();
-                showElement('addSubscription');
-            });
+            var storedLink = document.getElementById('clickedLink');
+            storedLink.value = a.href;
+            //load categories then display them
+            displayCategoryList();
+            // loadUserCategories(function(){
+
+            // });
         }
+        showElement('addSubscription');
     } else {
         showElement('login');
     }
@@ -206,8 +217,8 @@ function loadUserCategories(callback){
     chrome.runtime.getBackgroundPage(function(backgroundPage){
         backgroundPage.apiRequestWrapper("categories", {
             onSuccess: function (result) {
-                // console.log('load cate');
-                // console.log(result);
+                console.log('load cate');
+                console.log(result);
                 // var category_html = escape(categoryList(result));
                 // console.log(category_html);
                 chrome.storage.sync.set({
@@ -249,15 +260,15 @@ function subscribeFeed (feedUrl, checkedCategories, title) {
             body["categories"] = bodyCategory;
         };
 
-        console.log(body);
-        console.log(JSON.stringify(body));
+        // console.log(body);
+        // console.log(JSON.stringify(body));
 
         chrome.runtime.getBackgroundPage(function(backgroundPage){
             backgroundPage.apiRequestWrapper("subscriptions", {
                 method: 'POST',
                 body: body,
                 onSuccess: function(response){
-                    console.log('success');
+                    console.log('success sub');
                     console.log(response);
                     showElement('message');
                 },
@@ -288,6 +299,12 @@ function getCheckedBoxes(chkboxName) {
   }
   // Return the array if it is non-empty, or null
   return checkboxesChecked.length > 0 ? checkboxesChecked : null;
+}
+
+// http://stackoverflow.com/questions/1026069/capitalize-the-first-letter-of-string-in-javascript
+function capitaliseFirstLetter(string)
+{
+    return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
 // Call as
